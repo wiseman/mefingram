@@ -85,3 +85,30 @@ slyt	2010-05	1	92332
 slyt	2010-07	1	93465
 slyt	2010-08	2	94670,95247
 ```
+
+Exploration
+-----------
+
+To see the 10 most common 6-grams from ask.metafilter.com (the values
+after the `-t` and `-F` options are literal tab characters that you
+can insert in bash by pressing CTRL-V then TAB):
+
+```
+$ cat ~/data/ngram_askme_overall.txt |
+  grep '.* .* .* .* .* ' |
+  sort -t '	' -k2n |
+  tail -10 |
+  awk -F '	' '{print $1, $2;}' |
+  tac
+
+what is the best way to 113
+what do i need to know 88
+should i stay or should i 82
+i stay or should i go 80
+how do i get rid of 79
+what is the name of this 69
+i do not want to be 63
+is there such a thing as 48
+what should i do with my 45
+i do not know how to 34
+```
