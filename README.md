@@ -90,8 +90,9 @@ Exploration
 -----------
 
 To see the 10 most common 6-grams from ask.metafilter.com (the values
-after the `-t` and `-F` options are literal tab characters that you
-can insert in bash by pressing CTRL-V then TAB):
+after the `-t` and `-F` options are literal tab characters inside
+single quotes--you can insert a literal tab by pressing CTRL-V then
+TAB):
 
 ```
 $ cat ~/data/ngram_askme_overall.txt |
