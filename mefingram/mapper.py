@@ -12,11 +12,16 @@ class Error(Exception):
   pass
 
 
-def join_posts(data_file, title_file, joined_file):
+def join_posts(data_file, title_file, joined_file, site=None):
   posts = infodump.read_posts(data_file, title_file)
   for post in posts:
-    joined_file.write(u'%s\t%s\t%s\n' % (
-        post.postid, infodump.datestamp_str(post.datestamp), post.title))
+    if site:
+      joined_file.write(u'%s\t%s\t%s\t%s\n' % (
+          site, post.postid, infodump.datestamp_str(post.datestamp),
+          post.title))
+    else:
+      joined_file.write(u'%s\t%s\t%s\n' % (
+          post.postid, infodump.datestamp_str(post.datestamp), post.title))
 
 
 class NGramProtocol(object):
@@ -26,10 +31,11 @@ class NGramProtocol(object):
 
 class NGramByDateProtocol(NGramProtocol):
   def write(self, key, value):
-    ngram, date = key
+    ngram, site, date = key
     count, postids = value
-    result = u'%s\t%s\t%s\t%s' % (
+    result = u'%s\t%s\t%s\t%s\t%s' % (
       ngram,
+      site,
       date,
       count,
       u','.join(map(unicode, postids)))
@@ -37,10 +43,12 @@ class NGramByDateProtocol(NGramProtocol):
 
 
 class NGramOverallProtocol(NGramProtocol):
-  def write(self, ngram, value):
+  def write(self, key, value):
+    ngram, site = key
     count, postids = value
-    result = u'%s\t%s\t%s' % (
+    result = u'%s\t%s\t%s\t%s' % (
       ngram,
+      site,
       count,
       u','.join(map(unicode, postids)))
     return result.encode('utf8')

@@ -38,10 +38,9 @@ YEARS = range(1999, 2014)
 def get_year_counts_for_phrase(corpus, phrase):
   tokens = text.tokenize(phrase)
   query = ' '.join(tokens)
-  regex = '%s\t([0-9]+)\t([0-9]+)\t(.*)' % (query,)
+  regex = '%s\t%s\t([0-9]+)\t([0-9]+)\t(.*)' % (query, corpus)
   regex = re.compile(regex)
-  ngram_path = os.path.join(
-    FLAGS.ngram_dir, 'ngram_%s_yearly.txt' % (corpus,))
+  ngram_path = os.path.join(FLAGS.ngram_dir, 'ngrams_yearly.txt')
   counts = {}
   with open(ngram_path, 'rb') as ngrams:
     for line in ngrams:

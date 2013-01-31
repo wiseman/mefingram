@@ -11,7 +11,7 @@ class NGramMonthlyCounter(mapper.NGramCounter):
 
   def parse_infodump(self, unused_key, line):
     line = unicode(line, 'utf8')
-    postid_str, datestamp_str, title = line.split('\t')
+    site, postid_str, datestamp_str, title = line.split('\t')
     datestamp = infodump.parse_datestamp(datestamp_str)
     postid = int(postid_str)
     for i in range(mapper.MAX_N):
@@ -19,8 +19,9 @@ class NGramMonthlyCounter(mapper.NGramCounter):
       ngrams = text.ngrams_for_text(title, n)
       for ngram in ngrams:
         ngram_str = ' '.join(ngram)
-        yield ((ngram_str, '%s-%02d' % (datestamp.year, datestamp.month)),
-               (1, postid))
+        key = (ngram_str, site, '%s-%02d' % (datestamp.year, datestamp.month))
+        value = (1, postid)
+        yield (key, value)
 
 
 if __name__ == '__main__':

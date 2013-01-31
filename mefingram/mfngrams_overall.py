@@ -10,14 +10,16 @@ class NGramOverallCounter(mapper.NGramCounter):
 
   def parse_infodump(self, unused_key, line):
     line = unicode(line, 'utf8')
-    postid_str, unused_datestamp_str, title = line.split('\t')
+    site, postid_str, unused_datestamp_str, title = line.split('\t')
     postid = int(postid_str)
     for i in range(mapper.MAX_N):
       n = i + 1
       ngrams = text.ngrams_for_text(title, n)
       for ngram in ngrams:
         ngram_str = ' '.join(ngram)
-        yield (ngram_str, (1, postid))
+        key = (ngram_str, site)
+        value = (1, postid)
+        yield (key, value)
 
 
 if __name__ == '__main__':

@@ -26,35 +26,40 @@ gflags.DEFINE_string(
   'sites', ','.join(map(str, infodump.SITES)),
   'A comma-delimited list of the sites to process.')
 
+gflags.DEFINE_list(
+  'aggregate', ['overall', 'yearly', 'monthly'],
+  'Aggregate groups')
 
-def generate_ngrams_for_site(site):
-  data_path = os.path.join(FLAGS.infodump_dir, 'postdata_%s.txt' % (site,))
-  title_path = os.path.join(FLAGS.infodump_dir, 'posttitles_%s.txt' % (site,))
-  logger.info('Joining post data for %s...', site)
-  with tempfile.NamedTemporaryFile() as joined_file:
-    utf8_joined_file = codecs.getwriter('utf8')(joined_file)
-    with open(data_path, 'rb') as data_file:
-      with open(title_path, 'rb') as title_file:
-        mapper.join_posts(data_file, title_file, utf8_joined_file)
-        utf8_joined_file.flush()
-    logger.info('Generating overall ngrams for %s...', site)
-    output_path = os.path.join(
-      FLAGS.infodump_dir,
-      'ngram_%s_overall.txt' % (site,))
-    run_counter(
-      mfngrams_overall.NGramOverallCounter, joined_file.name, output_path)
-    logger.info('Generating yearly ngrams for %s...', site)
-    output_path = os.path.join(
-      FLAGS.infodump_dir,
-      'ngram_%s_yearly.txt' % (site,))
-    run_counter(
-      mfngrams_yearly.NGramYearlyCounter, joined_file.name, output_path)
-    logger.info('Generating monthly ngrams for %s...', site)
-    output_path = os.path.join(
-      FLAGS.infodump_dir,
-      'ngram_%s_monthly.txt' % (site,))
-    run_counter(
-      mfngrams_monthly.NGramMonthlyCounter, joined_file.name, output_path)
+
+def generate_ngrams_for_sites(sites):
+  with tempfile.NamedTemporaryFile() as temp_joined_file:
+    utf8_joined_file = codecs.getwriter('utf8')(temp_joined_file)
+    for site in sites:
+      logger.info('Joining post data for %s...', site)
+      data_path = os.path.join(FLAGS.infodump_dir, 'postdata_%s.txt' % (site,))
+      title_path = os.path.join(
+        FLAGS.infodump_dir, 'posttitles_%s.txt' % (site,))
+      with open(data_path, 'rb') as data_file:
+        with open(title_path, 'rb') as title_file:
+          mapper.join_posts(data_file, title_file, utf8_joined_file, site=site)
+    utf8_joined_file.flush()
+    if 'overall' in FLAGS.aggregate:
+      logger.info('Generating overall ngrams for %s...', sites)
+      output_path = os.path.join(FLAGS.infodump_dir, 'ngrams_overall.txt')
+      run_counter(
+        mfngrams_overall.NGramOverallCounter, temp_joined_file.name,
+        output_path)
+    if 'yearly' in FLAGS.aggregate:
+      logger.info('Generating yearly ngrams for %s...', sites)
+      output_path = os.path.join(FLAGS.infodump_dir, 'ngrams_yearly.txt')
+      run_counter(
+        mfngrams_yearly.NGramYearlyCounter, temp_joined_file.name, output_path)
+    if 'monthly' in FLAGS.aggregate:
+      logger.info('Generating monthly ngrams for %s...', sites)
+      output_path = os.path.join(FLAGS.infodump_dir, 'ngrams_monthly.txt')
+      run_counter(
+        mfngrams_monthly.NGramMonthlyCounter, temp_joined_file.name,
+        output_path)
 
 
 def run_counter(klass, input_path, output_path):
@@ -65,6 +70,7 @@ def run_counter(klass, input_path, output_path):
     ]
   counter = klass(args=args)
   with counter.make_runner() as runner:
+    logger.info('Running mrjob with args %s' % (args,))
     runner.run()
     logger.info('Writing results to %s...', output_path)
     with open(output_path, 'wb') as output_file:
@@ -77,8 +83,8 @@ def main():
   logging.basicConfig(
     level=logging.INFO,
     format=LOGGING_FORMAT)
-  for site in FLAGS.sites.split(','):
-    generate_ngrams_for_site(site)
+  sites = FLAGS.sites.split(',')
+  generate_ngrams_for_sites(sites)
 
 
 if __name__ == '__main__':
