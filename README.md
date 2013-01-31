@@ -95,7 +95,7 @@ single quotes--you can insert a literal tab by pressing CTRL-V then
 TAB):
 
 ```
-$ cat ~/data/ngram_askme_overall.txt |
+$ cat ../infodump-all/ngram_askme_overall.txt |
   grep '.* .* .* .* .* ' |
   sort -t '	' -k2n |
   tail -10 |
