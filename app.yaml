@@ -21,14 +21,14 @@ builtins:
 - remote_api: on
 - appstats: on
 
+libraries:
+- name: jinja2
+  version: latest
+
 handlers:
 #- url: /static
 #  static_dir: sirc/fe/static
 #  expiration: "1m"
-
-#- url: /remote_api
-#  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
-#  login: optional
 
 - url: /.*
   script: gae.app

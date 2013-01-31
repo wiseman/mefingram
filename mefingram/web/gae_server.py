@@ -1,5 +1,9 @@
+import itertools
+import json
 import logging
+import os
 
+import jinja2
 from google.appengine.ext import db
 import webapp2
 
@@ -7,50 +11,71 @@ from mefingram import infodump
 
 
 logger = logging.getLogger(__name__)
+jinja = jinja2.Environment(
+  loader=jinja2.FileSystemLoader(os.path.join(
+      os.path.dirname(__file__), 'templates')))
 
 
-# key_name = mefi|askme|music|meta
-class Site(db.Model):
-  pass
+def to_json_filter(v):
+  return json.dumps(v)
+
+jinja.filters['tojson'] = to_json_filter
+
+
+DEFAULT_CONTENT = u'I for one, what it says on the tin, think of the children'
+DEFAULT_CORPUS = u'mefi'
+
+YEARS = range(1999, 2014)
 
 
 class NGramCount(db.Model):
   ngram = db.StringProperty()
+  site = db.StringProperty()
   year = db.IntegerProperty()
   count = db.IntegerProperty()
   postids = db.StringListProperty()
 
 
-def init_datastore():
-  site_keys = [db.Key.from_path('Site', s) for s in infodump.SITES]
-  sites = db.get(site_keys)
-  logger.info('Got %s', sites)
-  sites = [s for s in sites if s]
-  logger.info('keys=%s', [s.key().name() for s in sites])
-  needed_site_names = infodump.SITES
-  for site in sites:
-    needed_site_names.remove(site.key().name())
-  logging.info('Creating sites: %s', needed_site_names)
-  needed_sites = [Site(key_name=s) for s in needed_site_names]
-  db.put(needed_sites)
-
-  parent = Site(key_name='mefi')
-  count = NGramCount(
-    parent=parent,
-    ngram='hello there',
-    year=2012,
-    count=5,
-    postids=['1', '2', '3'])
-  count.put()
-
-
 def make_application():
-  init_datastore()
+  #init_datastore()
   return  webapp2.WSGIApplication([('/', MainPage)],
                                   debug=True)
 
 
+def get_year_counts_for_phrases(corpus, phrases):
+  # Counts is a map from [phrase][year] -> count
+  counts = {}
+  for phrase in phrases:
+    counts[phrase] = {}
+  query = NGramCount.all()
+  query.filter('site =', corpus)
+  query.filter('ngram IN', phrases)
+  for result in query.run(batch_size=10000):
+    counts[result.ngram][result.year] = result.count
+  return counts
+
+
+def transform_results(phrases, results):
+  xformed_results = []
+  for phrase in phrases:
+    phrase_results = []
+    for year in YEARS:
+      phrase_results.append(results[phrase].get(year, 0))
+    xformed_results.append(phrase_results)
+  return list(itertools.izip(YEARS, *xformed_results))
+
+
 class MainPage(webapp2.RequestHandler):
   def get(self):
-    self.response.headers['Content-Type'] = 'text/plain'
-    self.response.write('Hello, webapp2 World!')
+    content = self.request.get('content') or DEFAULT_CONTENT
+    corpus = self.request.get('corpus') or DEFAULT_CORPUS
+    content_phrases = content.split(',')
+    results = get_year_counts_for_phrases(corpus, content_phrases)
+    final_results = transform_results(content_phrases, results)
+    template = jinja.get_template('index.tmpl')
+    template_values = dict(
+      content=content,
+      corpus=corpus,
+      content_phrases=content_phrases,
+      results=final_results)
+    self.response.out.write(template.render(template_values))

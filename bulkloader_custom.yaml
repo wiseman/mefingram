@@ -30,20 +30,21 @@ transformers:
     # TSV is specified using an extra parameter of the Python csv module.
     import_options:
       dialect: excel-tab
-    column_list: [ngram, year, count, postids]
-    # TODO: Add connector options here--these are specific to each connector.
+    column_list: [ngram, site, year, count, postids]
   property_map:
     - property: __key__
-      external_name: key
-      export_transform: transform.key_id_or_name_as_string
-
+      import_template: "%(ngram)s-%(site)s-%(year)s"
     - property: ngram
       external_name: ngram
       # Type: String
 
+    - property: site
+      external_name: site
+      # Type: String
+
     - property: year
       external_name: year
-      # Type: String
+      import_transform: int
 
     - property: count
       external_name: count
