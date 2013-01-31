@@ -21,6 +21,7 @@ settings = dict(
   url='https://github.com/jjwiseman/mefingram',
   packages=['mefingram'],
   install_requires=[
+    'flask',
     'python-gflags',
     'mrjob',
     'nltk'],

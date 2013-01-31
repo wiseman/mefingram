@@ -1,8 +1,12 @@
 import unicodedata
 
-import nltk
-from nltk import data as nltk_data
-from nltk import util as nltk_util
+
+try:
+  import nltk
+  from nltk import data as nltk_data
+  from nltk import util as nltk_util
+except ImportError:
+  pass
 
 
 def is_letter_or_number(c):

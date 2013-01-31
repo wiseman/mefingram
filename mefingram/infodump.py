@@ -4,7 +4,6 @@ import logging
 
 from mefingram import text
 
-from nltk import ngram
 
 logger = logging.getLogger(__name__)
 
