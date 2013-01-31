@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Metafilter N-gram Viewer</title>
+    <link rel="stylesheet" type="text/css" href="https://www.google.com/css/google.css">
+  </head>
+
+  <body id="container">
+    <h1 id="logo">
+      <table>
+        <tr>
+          <td style="padding-left: 0cm; color: #009925; font-size: 28px;">Metafilter N-gram Viewer</td>
+        </tr>
+      </table>
+    </h1>
+    
+    <div style="clear:both"></div>
+    <div class="ngrams_query_section">
+      <form id="query" action="/" method="get" name="input">
+        <div class="query_graphthese_line">Graph these <span style="color:#3369e8;font-weight:bold">case-insensitive</span> comma-separated phrases:
+          <input type="text"
+                 name="content"
+                 size="60"
+                 value="{{content}}"
+                 maxlength=240 />
+        </div>
+        <div class="query_dcs_line">
+          from the corpus
+          <select name="corpus">
+            <option value="mefi" {% if corpus == 'mefi' %} selected {% endif %}>Metafilter</option>
+            <option value="askme" {% if corpus == 'askme' %} selected {% endif %}>Ask Metafilter</option>
+            <option value="meta" {% if corpus == 'meta' %} selected {% endif %}>Metatalk</option>
+            <option value="music" {% if corpus == 'music' %} selected {% endif %}>Music</option>
+          </select>
+        </div>
+      
+        <input type="hidden" name="share" value="" >
+      
+        <div class="query_submit_line">
+          <input type="submit" value="Search lots of titles" />
+        </div>
+      </form>
+    </div> 
+
+    <script type="text/javascript">
+      document.forms['input'].elements['content'].focus();
+    </script>
+
+  
+    <div style="clear:both"></div>
+
+
+    <div class="ngrams_chart_section">
+      <center>
+        <table width="100%">
+          <tr>
+            <td width="90%">
+              
+              <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+              <script type="text/javascript">
+// Load the Visualization API.
+google.load('visualization', '1', {'packages':['corechart']});
+
+// Set a callback to run when the Google Visualization API is loaded.
+google.setOnLoadCallback(drawChart);
+
+// Callback that creates and populates a data table, and draws the chart.
+function drawChart() {
+  // Create the data table.
+  var data = new google.visualization.DataTable();
+
+  // Add column headings, with escaping for JS strings.
+  
+    data.addColumn('number', 'Year');
+  
+
+    {% for phrase in content_phrases %}
+    data.addColumn('number', {{ phrase|tojson|safe }});
+    {% endfor %}
+  
+
+  // Add graph data, without autoescaping.
+  data.addRows({{results|tojson|safe}});
+
+  // Format the data columns.
+  var formatter =
+      new google.visualization.NumberFormat({ pattern: '######' });
+  for (col = 1; col < data.getNumberOfColumns(); col++) {
+    formatter.format(data, col);
+  }
+
+  // Set general chart options.
+  var options = {
+    chartArea: { left: 100, width: "85%" },
+    focusTarget: 'category',
+    legend: { position: 'top' },
+    tooltip: { isHtml: true },
+    hAxis: { format: '####', gridlines: { count: 1 } },
+    vAxis: {
+      format: '########',
+      gridlines: { count: 6 },
+      minValue: 0,
+      baselineColor: 'black'
+    }
+  }
+
+  function selectHandler() {
+    chart.setSelection(null);
+  }
+  // Draw the chart.
+  var chart = new google.visualization.LineChart(
+                      document.getElementById('chart_div'));
+  google.visualization.events.addListener(chart, 'select', selectHandler);
+  chart.draw(data, options);
+}
+                      </script>
+              <div align="left" id="chart_div" style="height: 400px;"></div>
+
+            </td>
+          </tr>
+
+        </table>
+
+      </center>
+    </div>
+
+    <center id="datasets-announcement">
+      Improve this code, or run it on your own machine!  Code is available
+      <a href="https://github.com/wiseman/mefingram">here</a>.
+    </center>
+
+    <center>
+      <div id="about">
+        <a href="/about.html">About Metafilter N-gram Viewer</a>
+      </div>
+    </center>
+
+  </body>
+</html>

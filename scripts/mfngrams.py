@@ -38,15 +38,21 @@ def generate_ngrams_for_site(site):
         mapper.join_posts(data_file, title_file, utf8_joined_file)
         utf8_joined_file.flush()
     logger.info('Generating overall ngrams for %s...', site)
-    output_path = 'ngram_%s_overall.txt' % (site,)
+    output_path = os.path.join(
+      FLAGS.infodump_dir,
+      'ngram_%s_overall.txt' % (site,))
     run_counter(
       mfngrams_overall.NGramOverallCounter, joined_file.name, output_path)
     logger.info('Generating yearly ngrams for %s...', site)
-    output_path = 'ngram_%s_yearly.txt' % (site,)
+    output_path = os.path.join(
+      FLAGS.infodump_dir,
+      'ngram_%s_yearly.txt' % (site,))
     run_counter(
       mfngrams_yearly.NGramYearlyCounter, joined_file.name, output_path)
     logger.info('Generating monthly ngrams for %s...', site)
-    output_path = 'ngram_%s_monthly.txt' % (site,)
+    output_path = os.path.join(
+      FLAGS.infodump_dir,
+      'ngram_%s_monthly.txt' % (site,))
     run_counter(
       mfngrams_monthly.NGramMonthlyCounter, joined_file.name, output_path)
 
