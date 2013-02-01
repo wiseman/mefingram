@@ -29,7 +29,7 @@ def send_script(filename):
   return flask.send_from_directory(os.path.join(THIS_DIR, 'static'), filename)
 
 
-DEFAULT_CONTENT = 'I for one, what it says on the tin, think of the children'
+DEFAULT_CONTENT = 'I for one weclome, what it says on the tin, slyt'
 DEFAULT_CORPUS = 'mefi'
 
 YEARS = range(1999, 2014)

@@ -22,7 +22,7 @@ def to_json_filter(v):
 jinja.filters['tojson'] = to_json_filter
 
 
-DEFAULT_CONTENT = u'I for one, what it says on the tin, think of the children'
+DEFAULT_CONTENT = u'I for one welcome, what it says on the tin, slyt'
 DEFAULT_CORPUS = u'mefi'
 
 YEARS = range(1999, 2014)
