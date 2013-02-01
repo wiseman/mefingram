@@ -8,6 +8,7 @@ from google.appengine.ext import db
 import webapp2
 
 from mefingram import infodump
+from mefingram import text
 
 
 logger = logging.getLogger(__name__)
@@ -45,13 +46,18 @@ def make_application():
 def get_year_counts_for_phrases(corpus, phrases):
   # Counts is a map from [phrase][year] -> count
   counts = {}
+  tokenized_to_phrases = {}
+  for phrase in phrases:
+    tokens = text.tokenize(phrase)
+    token_str = ' '.join(tokens)
+    tokenized_to_phrases[token_str] = phrase
   for phrase in phrases:
     counts[phrase] = {}
   query = NGramCount.all()
   query.filter('site =', corpus)
-  query.filter('ngram IN', phrases)
+  query.filter('ngram IN', tokenized_to_phrases.keys())
   for result in query.run(batch_size=10000):
-    counts[result.ngram][result.year] = result.count
+    counts[tokenized_to_phrases[result.ngram]][result.year] = result.count
   return counts
 
 
