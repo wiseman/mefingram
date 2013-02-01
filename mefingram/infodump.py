@@ -2,8 +2,6 @@ import csv
 import datetime
 import logging
 
-from mefingram import text
-
 
 logger = logging.getLogger(__name__)
 
@@ -92,10 +90,3 @@ def read_posts(data_file, title_file):
             '%s:%s Skipping postid %s because it does not exist in title file',
             data_file.name, record_number + 2, postid)
   return posts
-
-
-def make_ngram_model(n, posts):
-  words = []
-  for post in posts:
-    words += text.tokenize(post.title)
-  return ngram.NgramModel(n, words)
