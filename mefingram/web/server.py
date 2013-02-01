@@ -5,7 +5,7 @@ import re
 import sys
 
 import gflags
-import  flask
+import flask
 
 from mefingram import text
 
