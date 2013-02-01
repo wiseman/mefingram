@@ -2,10 +2,9 @@ application: mefingram
 version: 1
 runtime: python27
 api_version: 1
-threadsafe: false
+threadsafe: true
 
 skip_files:
-- env
 - ^(.*/)?app\.yaml
 - ^(.*/)?app\.yml
 - ^(.*/)?index\.yaml
@@ -15,7 +14,7 @@ skip_files:
 - ^(.*/)?.*\.py[co]
 - ^(.*/)?.*/RCS/.*
 - ^(.*/)?\..*
-- ^.*/solr/.*
+- env
 
 builtins:
 - remote_api: on
@@ -26,10 +25,9 @@ libraries:
   version: latest
 
 handlers:
-#- url: /static
-#  static_dir: sirc/fe/static
-#  expiration: "1m"
+- url: /static
+  static_dir: mefingram/web/static
+  expiration: "10m"
 
 - url: /.*
   script: gae.app
-
