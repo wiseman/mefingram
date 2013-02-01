@@ -141,4 +141,4 @@ $ env/bin/python -m mefingram.web.server --ngram_dir=../infodump-all
 ```
 
 Then point your browser at
-(http://127.0.0.1:5000/)[http://127.0.0.1:5000/].
+[http://127.0.0.1:5000/](http://127.0.0.1:5000/).
