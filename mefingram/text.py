@@ -1,3 +1,4 @@
+import re
 import unicodedata
 
 
@@ -38,9 +39,14 @@ def rewrite(s):
   return s
 
 
+WORDPUNCT_RE = re.compile(
+  r'\w+|[^\w\s]+', re.UNICODE | re.MULTILINE | re.DOTALL)
+
+
 def tokenize(string):
   string = rewrite(string.lower())
-  tokens = nltk.tokenize.wordpunct_tokenize(string)
+  tokens = WORDPUNCT_RE.findall(string)
+  print 'TOKENS=%s' % (tokens,)
   tokens = [t for t in tokens if is_letter_or_number(t[0])]
   return tokens
 
