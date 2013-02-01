@@ -6,13 +6,7 @@
     <link rel="stylesheet" type="text/css" href="site.css">
   </head>
   <body id="container">
-    <h1 id="logo">
-      <table>
-       <tr>
-         <td style="padding-left: 0cm; color: #009925; font-size: 28px;"><a href="/">Metafilter N-gram Viewer</a></td>
-       </tr>
-      </table>
-    </h1>
+    <h1 id="logo" style="padding-left: 0cm; color: #009925; font-size: 28px;"><a href="/">Metafilter N-gram Viewer</a></h1>
     
     <blockquote>
   
@@ -31,7 +25,7 @@
         Let's look at a sample graph:
       </p>
 
-      <img src="n-gram-example-1.png">
+      <img src="n-gram-example-1.png" alt="Chart screenshot">
 
       <p>
         This shows trends in three n-grams from 1999 to 2013: "I for
@@ -42,7 +36,7 @@
         www.metafilter.com.  Here, you can see that the first time the
         phrase "I for one welcome" was used in a title was 2004 and
         peaked in 2010, that the last time "what it says on the tin"
-        was arguably clever is 2008, and that since 2010 the use of
+        was clever is 2008, and that since 2010 the use of
         "slyt" in post titles has exploded.
       </p>
 
@@ -87,6 +81,26 @@
         The data for the Metafilter n-gram viewer comes from
         the <a href="http://stuff.metafilter.com/infodump/">Metafilter
         infodump</a>.
+      </p>
+
+      <p>
+        The data is up-to-date as of Jan. 26, 2013.
+      </p>
+
+      <a name="stats"><h2>Data statistics</h2></a>
+      
+      <table>
+        <tr><th>Site</th><th>Distinct n-grams</th><th></tr>
+        <tr><td>mefi</td><td>1489931</td></tr>
+        <tr><td>askme</td><td>3626298</td></tr>
+        <tr><td>meta</td><td>228822</td></tr>
+        <tr><td>music</td><td>43466</td></tr>
+      </table>
+
+      <a name="bugs"><h2>Are there bugs?</h2></a>
+      
+      <p>
+        Yes.  See <a href="https://github.com/wiseman/mefingram/issues">this list</a>.
       </p>
 
       <a name="code"><h2>I want to see the code or run it myself</h2></a>

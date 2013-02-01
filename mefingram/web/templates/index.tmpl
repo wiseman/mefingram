@@ -29,8 +29,6 @@
           </select>
         </div>
       
-        <input type="hidden" name="share" value="" >
-      
         <div class="query_submit_line">
           <input type="submit" value="Search lots of titles" />
         </div>
@@ -46,11 +44,6 @@
 
 
     <div class="ngrams_chart_section">
-      <center>
-        <table width="100%">
-          <tr>
-            <td width="90%">
-              
               <script type="text/javascript" src="https://www.google.com/jsapi"></script>
               <script type="text/javascript">
 // Load the Visualization API.
@@ -111,25 +104,17 @@ function drawChart() {
                       </script>
               <div align="left" id="chart_div" style="height: 400px;"></div>
 
-            </td>
-          </tr>
-
-        </table>
-
-      </center>
     </div>
 
-    <center id="datasets-announcement">
+    <div id="announcement">
       Improve this code, or run it on your own machine!  Code is available
       <a href="https://github.com/wiseman/mefingram">here</a>.
-    </center>
+    </div>
 
-    <center>
-      <div id="about">
-        <a href="/static/about.html">About Metafilter N-gram Viewer</a>
-      </div>
-    </center>
-
+    <div id="about">
+      <a href="/static/about.html">About Metafilter N-gram Viewer</a>
+    </div>
+    
     <script type="text/javascript">
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-38146412-1']);

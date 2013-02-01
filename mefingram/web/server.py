@@ -36,6 +36,8 @@ YEARS = range(1999, 2014)
 
 
 def get_year_counts_for_phrase(corpus, phrase):
+  phrase = phrase.lower()
+  phrase = text.rewrite(phrase)
   tokens = text.tokenize(phrase)
   query = ' '.join(tokens)
   regex = '%s\t%s\t([0-9]+)\t([0-9]+)\t(.*)' % (query, corpus)

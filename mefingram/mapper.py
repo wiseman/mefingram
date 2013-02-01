@@ -3,6 +3,7 @@ import itertools
 from mrjob import job
 
 from mefingram import infodump
+from mefingram import text
 
 
 MAX_N = 6
@@ -60,6 +61,10 @@ class NGramCounter(job.MRJob):
 
   def parse_infodump(self, unsued_key, unused_value):
     raise NotImplementedError()
+
+  def ngrams_for_text(self, s, n):
+    tokens = text.title_tokens(s)
+    return text.ngrams_for_tokens(tokens, n)
 
   def sum_counts(self, key, values):
     counts, postids = itertools.izip(*values)

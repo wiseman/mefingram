@@ -1,5 +1,4 @@
 from mefingram import mapper
-from mefingram import text
 
 
 class NGramOverallCounter(mapper.NGramCounter):
@@ -14,7 +13,7 @@ class NGramOverallCounter(mapper.NGramCounter):
     postid = int(postid_str)
     for i in range(mapper.MAX_N):
       n = i + 1
-      ngrams = text.ngrams_for_text(title, n)
+      ngrams = self.ngrams_for_text(title, n)
       for ngram in ngrams:
         ngram_str = ' '.join(ngram)
         key = (ngram_str, site)

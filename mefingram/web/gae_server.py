@@ -7,7 +7,6 @@ import jinja2
 from google.appengine.ext import db
 import webapp2
 
-from mefingram import infodump
 from mefingram import text
 
 
@@ -47,16 +46,21 @@ def get_year_counts_for_phrases(corpus, phrases):
   # Counts is a map from [phrase][year] -> count
   counts = {}
   tokenized_to_phrases = {}
+  logger.debug('phrases=%s', phrases)
   for phrase in phrases:
-    tokens = text.tokenize(phrase)
+    cooked_phrase = phrase.lower()
+    cooked_phrase = text.rewrite(cooked_phrase)
+    tokens = text.tokenize(cooked_phrase)
     token_str = ' '.join(tokens)
     tokenized_to_phrases[token_str] = phrase
+  logger.debug('%s', tokenized_to_phrases)
   for phrase in phrases:
     counts[phrase] = {}
   query = NGramCount.all()
   query.filter('site =', corpus)
   query.filter('ngram IN', tokenized_to_phrases.keys())
   for result in query.run(batch_size=10000):
+    logger.debug('result ngram=%r', result.ngram)
     counts[tokenized_to_phrases[result.ngram]][result.year] = result.count
   return counts
 
