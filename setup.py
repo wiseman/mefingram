@@ -7,6 +7,11 @@ except ImportError:
   from distutils.core import setup
 
 
+# Work around setuptools bug
+# http://article.gmane.org/gmane.comp.python.peak/2509
+import multiprocessing
+
+
 PACKAGE_NAME = 'mefingram'
 VERSION = '0.0.1'
 
@@ -20,11 +25,16 @@ settings = dict(
   author_email='jjwiseman@gmail.com',
   url='https://github.com/jjwiseman/mefingram',
   packages=['mefingram'],
+  test_suite='nose.collector',
   install_requires=[
     'flask',
     'python-gflags',
     'mrjob',
-    'nltk'],
+    'nltk'
+    ],
+  tests_require=[
+    'nose'
+    ],
   license='MIT',
   classifiers=(
     # 'Development Status :: 5 - Production/Stable',
