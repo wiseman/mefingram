@@ -31,18 +31,9 @@ $ env/bin/python scripts/mfngrams.py --infodump_dir=../infodump-all
 This creates the following files (with their approximate sizes):
 
 ```
-ngram_askme_monthly.txt  176M 
-ngram_askme_overall.txt  122M 
-ngram_askme_yearly.txt   150M 
-ngram_mefi_monthly.txt    67M 
-ngram_mefi_overall.txt    46M 
-ngram_mefi_yearly.txt     58M 
-ngram_meta_monthly.txt    10M 
-ngram_meta_overall.txt     7M 
-ngram_meta_yearly.txt      8M 
-ngram_music_monthly.txt    2M 
-ngram_music_overall.txt    1M 
-ngram_music_yearly.txt     1M  
+ngrams_monthly.txt  295M
+ngrams_yearly.txt   252M
+ngrams_overall.txt  205M
 ```
 
 N-gram file format
@@ -50,56 +41,80 @@ N-gram file format
 
 The n-gram files contain tab-separated values.
 
-The `overall` files contain n-gram data for the entire history of the
-site, including counts and a list of comma-separated post IDs.  For
-example:
+The `overall` file contain n-gram data for the entire history of the
+metafilter sub-sites.  Each record has the following fields:
+
+  * n-gram - The actual n-gram
+  * site - The name of the sub-site: askme, mefi, meta or music.
+  * occurrences - The number of times this n-gram appeared in this year.
+  * postids - A comma-delimited list of postids in which this n-gram occurred.
+
+For example:
 
 ```
-should a doctor be able to	1	35675
-should a doctor be able	1	35675
-should a doctor be	1	185,11432,35675
+should a doctor be able to\taskme\t1\t35675
+should a doctor be able\taskme\t1\t35675
+should a doctor be\taskme\t1\t185,11432,35675
 ```
 
-The `yearly` files contain n-grams grouped by year:
+The `yearly` file contain n-grams grouped by year.  It contains
+records with the following fields:
+
+  * n-gram - The actual n-gram
+  * site - The name of the sub-site: askme, mefi, meta or music.
+  * year - The year in which the n-gram occurred.
+  * occurrences - The number of times this n-gram appeared in this year.
+  * postids - A comma-delimited list of postids in which this n-gram occurred.
+
+For example:
 
 ```
-slyt	2008	3	71254,75686,76724
-slyt	2009	2	86791,87482
-slyt	2010	13	88738,90507,92332,93465,94670,95247,96291,96625,97251,97305,97595,97878,97975
-slyt	2011	15	99189,99953,100110,100284,101967,103370,106855,106980,107213,109140,109296,110073,110203,110395,111039
-slyt	2012	14	111175,111811,112509,112714,114503,114588,114605,114752,114806,117570,117998,120616,120656,122077
-slyt	2013	2	123660,123826
+slyt\tmefi\t2008\t3\t71254,75686,76724
+slyt\tmefi\t2009\t2\t86791,87482
+slyt\tmefi\t2010\t13\t88738,90507,92332,93465,94670,95247,96291,96625,97251,97305,97595,97878,97975
+slyt\tmefi\t2011\t15\t99189,99953,100110,100284,101967,103370,106855,106980,107213,109140,109296,110073,110203,110395,111039
+slyt\tmefi\t2012\t14\t111175,111811,112509,112714,114503,114588,114605,114752,114806,117570,117998,120616,120656,122077
+slyt\tmefi\t2013\t2\t123660,123826
 ```
 
-The `monthly` files contain n-grams grouped by month:
+The `monthly` files contain n-grams grouped by month.  It's records
+have the following fields:
+
+  * n-gram - The actual n-gram
+  * site - The name of the sub-site: askme, mefi, meta or music.
+  * month - The month in which the n-gram occurred, for example 2013-01.
+  * occurrences - The number of times this n-gram appeared in this year.
+  * postids - A comma-delimited list of postids in which this n-gram occurred.
+
+For example:
 
 ```
-slyt	2008-04	1	71254
-slyt	2008-10	1	75686
-slyt	2008-11	1	76724
-slyt	2009-11	1	86791
-slyt	2009-12	1	87482
-slyt	2010-01	1	88738
-slyt	2010-03	1	90507
-slyt	2010-05	1	92332
-slyt	2010-07	1	93465
-slyt	2010-08	2	94670,95247
+slyt\tmefi\t2008-04\t1\t71254
+slyt\tmefi\t2008-10\t1\t75686
+slyt\tmefi\t2008-11\t1\t76724
+slyt\tmefi\t2009-11\t1\t86791
+slyt\tmefi\t2009-12\t1\t87482
+slyt\tmefi\t2010-01\t1\t88738
+slyt\tmefi\t2010-03\t1\t90507
+slyt\tmefi\t2010-05\t1\t92332
+slyt\tmefi\t2010-07\t1\t93465
+slyt\tmefi\t2010-08\t2\t94670,95247
 ```
 
 Exploration
 -----------
 
-To see the 10 most common 6-grams from ask.metafilter.com (the values
-after the `-t` and `-F` options are literal tab characters inside
-single quotes--you can insert a literal tab by pressing CTRL-V then
-TAB):
+To see the 10 most common 6-grams from ask.metafilter.com (the `\t`
+values after the `-t` and `-F` options are literal tab characters
+inside single quotes--you can insert a literal tab by pressing CTRL-V
+then TAB):
 
 ```
-$ cat ../infodump-all/ngram_askme_overall.txt |
-  grep '.* .* .* .* .* ' |
-  sort -t '	' -k2n |
+$ cat ../infodump-all/ngram_overall.txt |
+  grep '.* .* .* .* .* ' | grep '\taskme' |
+  sort -t '\t' -k2n |
   tail -10 |
-  awk -F '	' '{print $1, $2;}' |
+  awk -F '\t' '{print $1, $3;}' |
   tac
 
 what is the best way to 113
@@ -113,3 +128,17 @@ is there such a thing as 48
 what should i do with my 45
 i do not know how to 34
 ```
+
+
+Running the web server
+----------------------
+
+The easiest way to run the n-gram viewer is this:
+
+```
+$ env/bin/python -m mefingram.web.server --ngram_dir=../infodump-all
+ * Running on http://127.0.0.1:5000/
+```
+
+Then point your browser at
+(http://127.0.0.1:5000/)[http://127.0.0.1:5000/].
