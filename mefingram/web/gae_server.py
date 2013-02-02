@@ -60,7 +60,6 @@ def get_year_counts_for_phrases(corpus, phrases):
   query.filter('site =', corpus)
   query.filter('ngram IN', tokenized_to_phrases.keys())
   for result in query.run(batch_size=10000):
-    logger.debug('result ngram=%r', result.ngram)
     counts[tokenized_to_phrases[result.ngram]][result.year] = result.count
   return counts
 
