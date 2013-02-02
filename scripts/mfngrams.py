@@ -32,8 +32,8 @@ gflags.DEFINE_list(
 
 
 def generate_ngrams_for_sites(sites):
-  with tempfile.NamedTemporaryFile() as temp_joined_file:
-    utf8_joined_file = codecs.getwriter('utf8')(temp_joined_file)
+  joined_posts_path = 'posts.tsv'
+  with codecs.open(joined_posts_path, 'wb', 'utf8') as joined_file:
     for site in sites:
       logger.info('Joining post data for %s...', site)
       data_path = os.path.join(FLAGS.infodump_dir, 'postdata_%s.txt' % (site,))
@@ -41,25 +41,23 @@ def generate_ngrams_for_sites(sites):
         FLAGS.infodump_dir, 'posttitles_%s.txt' % (site,))
       with open(data_path, 'rb') as data_file:
         with open(title_path, 'rb') as title_file:
-          mapper.join_posts(data_file, title_file, utf8_joined_file, site=site)
-    utf8_joined_file.flush()
-    if 'overall' in FLAGS.aggregate:
-      logger.info('Generating overall ngrams for %s...', sites)
-      output_path = 'ngrams_overall.tsv'
-      run_counter(
-        mfngrams_overall.NGramOverallCounter, temp_joined_file.name,
-        output_path)
-    if 'yearly' in FLAGS.aggregate:
-      logger.info('Generating yearly ngrams for %s...', sites)
-      output_path = 'ngrams_yearly.tsv'
-      run_counter(
-        mfngrams_yearly.NGramYearlyCounter, temp_joined_file.name, output_path)
-    if 'monthly' in FLAGS.aggregate:
-      logger.info('Generating monthly ngrams for %s...', sites)
-      output_path = 'ngrams_monthly.tsv'
-      run_counter(
-        mfngrams_monthly.NGramMonthlyCounter, temp_joined_file.name,
-        output_path)
+          mapper.join_posts(data_file, title_file, joined_file, site=site)
+  # Write n-gram files
+  if 'overall' in FLAGS.aggregate:
+    logger.info('Generating overall ngrams for %s...', sites)
+    output_path = 'ngrams_overall.tsv'
+    run_counter(
+      mfngrams_overall.NGramOverallCounter, joined_posts_path, output_path)
+  if 'yearly' in FLAGS.aggregate:
+    logger.info('Generating yearly ngrams for %s...', sites)
+    output_path = 'ngrams_yearly.tsv'
+    run_counter(
+      mfngrams_yearly.NGramYearlyCounter, joined_posts_path, output_path)
+  if 'monthly' in FLAGS.aggregate:
+    logger.info('Generating monthly ngrams for %s...', sites)
+    output_path = 'ngrams_monthly.tsv'
+    run_counter(
+      mfngrams_monthly.NGramMonthlyCounter, joined_posts_path, output_path)
 
 
 def run_counter(klass, input_path, output_path):

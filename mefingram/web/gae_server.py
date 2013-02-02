@@ -7,6 +7,7 @@ import jinja2
 from google.appengine.ext import db
 import webapp2
 
+from mefingram import infodump
 from mefingram import text
 
 
@@ -36,10 +37,11 @@ class NGramCount(db.Model):
   postids = db.StringListProperty()
 
 
-def make_application():
-  #init_datastore()
-  return  webapp2.WSGIApplication([('/', MainPage)],
-                                  debug=True)
+class Post(db.Model):
+  site = db.StringProperty()
+  postid = db.StringProperty()
+  datestamp = db.StringProperty()
+  title = db.StringProperty()
 
 
 def get_year_counts_for_phrases(corpus, phrases):
@@ -88,3 +90,31 @@ class MainPage(webapp2.RequestHandler):
       content_phrases=content_phrases,
       results=final_results)
     self.response.out.write(template.render(template_values))
+
+
+class PostRequester(webapp2.RequestHandler):
+  def get(self):
+    corpus = self.request.get('corpus')
+    postids = self.request.get('postids')
+    postid_list = postids.split()
+    query = Post.all()
+    logger.info('corpus=%s', corpus)
+    query.filter('site =', corpus)
+    query.filter('postid IN', postid_list)
+    results = []
+    for post in query.run(batch_size=10000):
+      result = (post.postid, post.datestamp, post.title)
+      results.append(result)
+    self.response.write(json.dumps(results))
+
+
+ROUTES = [
+  ('/', MainPage),
+  ('/post', PostRequester)]
+
+
+def make_application():
+  #init_datastore()
+  return  webapp2.WSGIApplication(
+    ROUTES,
+    debug=True)
