@@ -45,18 +45,18 @@ def generate_ngrams_for_sites(sites):
     utf8_joined_file.flush()
     if 'overall' in FLAGS.aggregate:
       logger.info('Generating overall ngrams for %s...', sites)
-      output_path = os.path.join(FLAGS.infodump_dir, 'ngrams_overall.txt')
+      output_path = 'ngrams_overall.tsv'
       run_counter(
         mfngrams_overall.NGramOverallCounter, temp_joined_file.name,
         output_path)
     if 'yearly' in FLAGS.aggregate:
       logger.info('Generating yearly ngrams for %s...', sites)
-      output_path = os.path.join(FLAGS.infodump_dir, 'ngrams_yearly.txt')
+      output_path = 'ngrams_yearly.tsv'
       run_counter(
         mfngrams_yearly.NGramYearlyCounter, temp_joined_file.name, output_path)
     if 'monthly' in FLAGS.aggregate:
       logger.info('Generating monthly ngrams for %s...', sites)
-      output_path = os.path.join(FLAGS.infodump_dir, 'ngrams_monthly.txt')
+      output_path = 'ngrams_monthly.tsv'
       run_counter(
         mfngrams_monthly.NGramMonthlyCounter, temp_joined_file.name,
         output_path)

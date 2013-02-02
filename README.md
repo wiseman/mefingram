@@ -30,12 +30,13 @@ my laptop):
 $ env/bin/python scripts/mfngrams.py --infodump_dir=../infodump-all
 ```
 
-This creates the following files (with their approximate sizes):
+This creates the following files in the current directory (with their
+approximate sizes):
 
 ```
-ngrams_monthly.txt  295M
-ngrams_yearly.txt   252M
-ngrams_overall.txt  205M
+ngrams_monthly.tsv  295M
+ngrams_yearly.tsv   252M
+ngrams_overall.tsv  205M
 ```
 
 N-gram file format
@@ -112,7 +113,7 @@ inside single quotes--you can insert a literal tab by pressing CTRL-V
 then TAB):
 
 ```
-$ cat ../infodump-all/ngram_overall.txt |
+$ cat ngram_overall.tsv |
   grep '.* .* .* .* .* ' | grep '\taskme' |
   sort -t '\t' -k2n |
   tail -10 |
@@ -144,3 +145,25 @@ $ env/bin/python -m mefingram.web.server --ngram_dir=../infodump-all
 
 Then point your browser at
 [http://127.0.0.1:5000/](http://127.0.0.1:5000/).
+
+
+mefingram.appspot.com
+---------------------
+
+To upload n-gram data to Google App Engine:
+
+```
+$ appcfg.py --oauth2 upload_data \
+  --config_file=bulkloader_custom.yaml \
+  --url=http://mefingram.appspot.com/_ah/remote_api \
+  --kind=NGramCount \
+  --filename=ngrams_yearly.txt \
+  --batch_size=20 \
+  --rps_limit=15000 \
+  --num_threads=200 \
+  --http_limit=400 \
+  --rps_limit=1000 \
+  --bandwidth_limit=304800
+```
+
+
