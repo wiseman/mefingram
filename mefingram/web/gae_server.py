@@ -50,14 +50,12 @@ def get_year_counts_for_phrases(corpus, phrases):
   # Counts is a map from [phrase][year] -> (count, postids)
   counts = {}
   tokenized_to_phrases = {}
-  logger.debug('phrases=%s', phrases)
   for phrase in phrases:
     cooked_phrase = phrase.lower()
     cooked_phrase = text.rewrite(cooked_phrase)
     tokens = text.tokenize(cooked_phrase)
     token_str = ' '.join(tokens)
     tokenized_to_phrases[token_str] = phrase
-  logger.debug('%s', tokenized_to_phrases)
   for phrase in phrases:
     counts[phrase] = {}
   query = NGramCount.all()
@@ -100,15 +98,12 @@ class PostRequester(webapp2.RequestHandler):
     corpus = self.request.get('corpus')
     postids = self.request.get('postids')
     postid_list = postids.split(',')
-    logger.info('corpus=%s', corpus)
-    logger.info('postids=%s', postids)
-    logger.info('postid_list=%s', postid_list)
+    postid_list = postid_list[:30]
     query = Post.all()
     query.filter('site =', corpus)
     query.filter('postid IN', postid_list)
     results = []
     for post in query.run(batch_size=10000):
-      logger.info('got result %s', post)
       result = (post.postid, post.datestamp, post.title)
       results.append(result)
     self.response.write(json.dumps(results))
