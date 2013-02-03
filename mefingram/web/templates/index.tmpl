@@ -7,98 +7,78 @@
     <link rel="stylesheet" type="text/css" href="static/site.css">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script type="text/javascript">
-corpus = {{ corpus|tojson|safe }};
-results = {{ results|tojson|safe }};
-phrases = [];
+
+
 MIN_YEAR = 1999;
 MAX_YEAR = 2013;
 
-
-function getAllPostIds() {
-  var postIds = [];
-  for (phrase in results) {
-    var phrase_results = results[phrase];
-    for (year in phrase_results) {
-      postIds = postIds.concat(phrase_results[year][1]);
-    }
+CHART_OPTIONS = {
+  chartArea: { left: 100, width: "85%" },
+  focusTarget: 'category',
+  legend: { position: 'top' },
+  tooltip: { isHtml: true },
+  hAxis: {
+    title: 'Year',
+    format: '####',
+    gridlines: { count: 1 }
+  },
+  vAxis: {
+    title: '# occurrences',
+    format: '########',
+    gridlines: { count: 6 },
+    minValue: 0,
+    baselineColor: 'black'
   }
-  return postIds;
-}
-
-
-function getPostIdsByYear() {
-  var postIds = {};
-  for (phrase in results) {
-    var phrase_results = results[phrase];
-    for (year in phrase_results) {
-      if (!(year in postIds)) {
-        postIds[year] = [];
-      }
-      postIds[year] = postIds[year].concat(phrase_results[year][1]);
-    }
-  }
-  return postIds;
-}
-
+};
 
 CORPUS_SITE_MAP = {
   'mefi': 'metafilter.com',
   'askme': 'ask.metafilter.com',
-  'meta': 'meta.metafilter.com',
+  'meta': 'metatalk.metafilter.com',
   'music': 'music.metafilter.com'
 };
 
 
-function htmlEncode(value){
-  //create a in-memory div, set it's inner text(which jQuery automatically encodes)
-  //then grab the encoded contents back out.  The div never exists on the page.
-  return $('<div/>').text(value).html();
-}
+Occurrences = function(corpus, phrase_data) {
+  this.corpus = corpus;
+  this.phrase_data_ = phrase_data;
+};
 
-
-function showPostsForYear(year) {
-  var postIds = getPostIdsByYear()[year];
-  postIds = postIds.slice(0, 30);
-  location.hash = year;
-  $.getJSON(
-    '/post',
-    {
-      'corpus': corpus,
-      'postids': postIds.join()
-    },
-    function(data) {
-      var i = 0;
-      html = '<h2>' + year + '</h2><p>';
-      for (i = 0; i < data.length; i++) {
-        var post = data[i];
-        var postId = post[0];
-        var title = post[2];
-        var url = 'http://' + CORPUS_SITE_MAP[corpus] + '/' + postId;
-        html += '<a href="' + htmlEncode(url) + '">' + title + '</a><br>';
-      }
-      html += '</p>';
-      $('#post-list').html(html);
-    });
-}
-
-
-function getChartRows() {
-  // Row format is [[year, p_1, p_2, ...], ...] where p_n is the
-  // number of occurrences of phrase 1 for that year.
+Occurrences.prototype.getPhrases = function() {
   var i = 0;
   var phrases = [];
-  for (phrase in results) {
+  console.log('this=');
+  console.log(this);
+  for (phrase in this.phrase_data_) {
+    console.log(phrase);
     phrases[i++] = phrase;
   }
+  console.log(phrases);
+  return phrases;
+};
 
+Occurrences.prototype.getPostIdsForYear = function(year) {
+  var postIds = [];
+  for (phrase in this.phrase_data_) {
+    var phrase_results = this.phrase_data_[phrase];
+    if (year in this.phrase_data_[phrase]) {
+      postIds = postIds.concat(this.phrase_data_[phrase][year][1]);
+      }
+  }
+  return postIds;
+};
+
+Occurrences.prototype.getChartRows = function() {
+  // Row format is [[year, p_1, p_2, ...], ...] where p_n is the
+  // number of occurrences of phrase 1 for that year.
   rows = [];
   var row_num = 0;
   for (year = MIN_YEAR; year <= MAX_YEAR; year++) {
     row = [year];
     field_num = 1;
-    for (phrase in results) {
-      if (year in results[phrase]) {
-        row[field_num++] = results[phrase][year][0];
+    for (phrase in this.phrase_data_) {
+      if (year in this.phrase_data_[phrase]) {
+        row[field_num++] = this.phrase_data_[phrase][year][0];
       } else {
         row[field_num++] = 0;
       }
@@ -108,6 +88,49 @@ function getChartRows() {
   return rows;
 }
 
+
+
+function htmlEncode(value){
+  //create a in-memory div, set it's inner text(which jQuery automatically encodes)
+  //then grab the encoded contents back out.  The div never exists on the page.
+  return $('<div/>').text(value).html();
+}
+
+
+function getUrlForPost(corpus, postId) {
+  return 'http://' + CORPUS_SITE_MAP[corpus] + '/' + escape(postId);
+}
+
+
+function showPostsForYear(year) {
+  var postIds = OCCURRENCES.getPostIdsForYear(year);
+  console.log('postids');
+  console.log(postIds);
+  // Limit to the first 30 posts.
+  postIds = postIds.slice(0, 30);
+  location.hash = year;
+  $.getJSON(
+    '/post',
+    {
+      'corpus': OCCURRENCES.corpus,
+      'postids': postIds.join()
+    },
+    function(data) {
+      var i = 0;
+      html = '<h2>' + year + '</h2><p>';
+      for (i = 0; i < data.length; i++) {
+        var post = data[i];
+        var postId = post[0];
+        var title = post[2];
+        var url = getUrlForPost(OCCURRENCES.corpus, postId);
+        html += '<a href="' + htmlEncode(url) + '">' + title + '</a><br>';
+      }
+      html += '</p>';
+      $('#post-list').html(html);
+    });
+}
+
+
 function drawChart() {
   // Create the data table.
   var data = new google.visualization.DataTable();
@@ -115,12 +138,14 @@ function drawChart() {
   // Add column headings, with escaping for JS strings.
     data.addColumn('number', 'Year');
 
-  for (phrase in results) {
-    data.addColumn('number', phrase);
+  var phrases = OCCURRENCES.getPhrases();
+  var i = 0;
+  for (i = 0; i < phrases.length; i++) {
+    data.addColumn('number', phrases[i]);
   }
 
   // Add graph data.
-  data.addRows(getChartRows());
+  data.addRows(OCCURRENCES.getChartRows());
 
   // Format the data columns.
   var formatter =
@@ -128,22 +153,6 @@ function drawChart() {
   for (col = 1; col < data.getNumberOfColumns(); col++) {
     formatter.format(data, col);
   }
-
-  // Set general chart options.
-  var options = {
-    chartArea: { left: 100, width: "85%" },
-    focusTarget: 'category',
-    legend: { position: 'top' },
-    tooltip: { isHtml: true },
-    hAxis: { format: '####', gridlines: { count: 1 } },
-    vAxis: {
-      format: '########',
-      gridlines: { count: 6 },
-      minValue: 0,
-      baselineColor: 'black'
-    }
-  }
-
 
   function selectHandler() {
     var selection = chart.getSelection();
@@ -159,8 +168,15 @@ function drawChart() {
   var chart = new google.visualization.LineChart(
                       document.getElementById('chart_div'));
   google.visualization.events.addListener(chart, 'select', selectHandler);
-  chart.draw(data, options);
+  chart.draw(data, CHART_OPTIONS);
 }
+
+
+OCCURRENCES = new Occurrences(
+  {{ corpus|tojson|safe }},
+  {{ results|tojson|safe }});
+
+
     </script>
   </head>
 
