@@ -33,7 +33,7 @@ gflags.DEFINE_list(
 
 def generate_ngrams_for_sites(sites):
   joined_posts_path = 'posts.tsv'
-  with codecs.open(joined_posts_path, 'wb', 'utf8') as joined_file:
+  with open(joined_posts_path, 'wb') as joined_file:
     for site in sites:
       logger.info('Joining post data for %s...', site)
       data_path = os.path.join(FLAGS.infodump_dir, 'postdata_%s.txt' % (site,))

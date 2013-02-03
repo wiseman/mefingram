@@ -9,8 +9,7 @@ class NGramMonthlyCounter(mapper.NGramCounter):
     mapper.NGramCounter.__init__(self, *args, **kw_args)
 
   def parse_infodump(self, unused_key, line):
-    line = unicode(line, 'utf8')
-    site, postid_str, datestamp_str, title = line.split('\t')
+    site, postid_str, datestamp_str, title = self.parse_line(line)
     datestamp = infodump.parse_datestamp(datestamp_str)
     postid = int(postid_str)
     for i in range(mapper.MAX_N):

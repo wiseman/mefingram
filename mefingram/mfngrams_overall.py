@@ -8,8 +8,7 @@ class NGramOverallCounter(mapper.NGramCounter):
     mapper.NGramCounter.__init__(self, *args, **kw_args)
 
   def parse_infodump(self, unused_key, line):
-    line = unicode(line, 'utf8')
-    site, postid_str, unused_datestamp_str, title = line.split('\t')
+    site, postid_str, unused_datestamp_str, title = self.parse_line(line)
     postid = int(postid_str)
     for i in range(mapper.MAX_N):
       n = i + 1
