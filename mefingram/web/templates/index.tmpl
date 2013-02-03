@@ -1,75 +1,126 @@
 <!DOCTYPE html>
-<html>
+  <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="author" content="John Wiseman jjwiseman@gmail.com">
     <title>Metafilter N-gram Viewer</title>
     <link rel="stylesheet" type="text/css" href="static/site.css">
-  </head>
-
-  <body id="container">
-    <h1 id="logo" style="padding-left: 0cm; color: #009925; font-size: 28px;"> Metafilter N-gram Viewer</span></h1>
-    
-    <div style="clear:both"></div>
-    <div class="ngrams_query_section">
-      <form id="query" action="/" method="get" name="input">
-        <div class="query_graphthese_line">Graph these <span style="color:#3369e8;font-weight:bold">case-insensitive</span> comma-separated phrases:
-          <input type="text"
-                 name="content"
-                 size="60"
-                 value="{{content}}"
-                 maxlength=240 />
-        </div>
-        <div class="query_dcs_line">
-          from the corpus
-          <select name="corpus">
-            <option value="mefi" {% if corpus == 'mefi' %} selected {% endif %}>Metafilter</option>
-            <option value="askme" {% if corpus == 'askme' %} selected {% endif %}>Ask Metafilter</option>
-            <option value="meta" {% if corpus == 'meta' %} selected {% endif %}>Metatalk</option>
-            <option value="music" {% if corpus == 'music' %} selected {% endif %}>Music</option>
-          </select>
-        </div>
-      
-        <div class="query_submit_line">
-          <input type="submit" value="Search lots of titles" />
-        </div>
-      </form>
-    </div> 
-
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script type="text/javascript">
-      document.forms['input'].elements['content'].focus();
-    </script>
+corpus = {{ corpus|tojson|safe }};
+results = {{ results|tojson|safe }};
+phrases = [];
+MIN_YEAR = 1999;
+MAX_YEAR = 2013;
 
-  
-    <div style="clear:both"></div>
+
+function getAllPostIds() {
+  var postIds = [];
+  for (phrase in results) {
+    var phrase_results = results[phrase];
+    for (year in phrase_results) {
+      postIds = postIds.concat(phrase_results[year][1]);
+    }
+  }
+  return postIds;
+}
 
 
-    <div class="ngrams_chart_section">
-              <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-              <script type="text/javascript">
-// Load the Visualization API.
-google.load('visualization', '1', {'packages':['corechart']});
+function getPostIdsByYear() {
+  var postIds = {};
+  for (phrase in results) {
+    var phrase_results = results[phrase];
+    for (year in phrase_results) {
+      if (!(year in postIds)) {
+        postIds[year] = [];
+      }
+      postIds[year] = postIds[year].concat(phrase_results[year][1]);
+    }
+  }
+  return postIds;
+}
 
-// Set a callback to run when the Google Visualization API is loaded.
-google.setOnLoadCallback(drawChart);
 
-// Callback that creates and populates a data table, and draws the chart.
+CORPUS_SITE_MAP = {
+  'mefi': 'metafilter.com',
+  'askme': 'ask.metafilter.com',
+  'meta': 'meta.metafilter.com',
+  'music': 'music.metafilter.com'
+};
+
+
+function htmlEncode(value){
+  //create a in-memory div, set it's inner text(which jQuery automatically encodes)
+  //then grab the encoded contents back out.  The div never exists on the page.
+  return $('<div/>').text(value).html();
+}
+
+
+function showPostsForYear(year) {
+  var postIds = getPostIdsByYear()[year];
+  postIds = postIds.slice(0, 30);
+  location.hash = year;
+  $.getJSON(
+    '/post',
+    {
+      'corpus': corpus,
+      'postids': postIds.join()
+    },
+    function(data) {
+      var i = 0;
+      html = '<h2>' + year + '</h2><p>';
+      for (i = 0; i < data.length; i++) {
+        var post = data[i];
+        var postId = post[0];
+        var title = post[2];
+        var url = 'http://' + CORPUS_SITE_MAP[corpus] + '/' + postId;
+        html += '<a href="' + htmlEncode(url) + '">' + title + '</a><br>';
+      }
+      html += '</p>';
+      $('#post-list').html(html);
+    });
+}
+
+
+function getChartRows() {
+  // Row format is [[year, p_1, p_2, ...], ...] where p_n is the
+  // number of occurrences of phrase 1 for that year.
+  var i = 0;
+  var phrases = [];
+  for (phrase in results) {
+    phrases[i++] = phrase;
+  }
+
+  rows = [];
+  var row_num = 0;
+  for (year = MIN_YEAR; year <= MAX_YEAR; year++) {
+    row = [year];
+    field_num = 1;
+    for (phrase in results) {
+      if (year in results[phrase]) {
+        row[field_num++] = results[phrase][year][0];
+      } else {
+        row[field_num++] = 0;
+      }
+    }
+    rows[row_num++] = row;
+  }
+  return rows;
+}
+
 function drawChart() {
   // Create the data table.
   var data = new google.visualization.DataTable();
 
   // Add column headings, with escaping for JS strings.
-  
     data.addColumn('number', 'Year');
-  
 
-    {% for phrase in content_phrases %}
-    data.addColumn('number', {{ phrase|tojson|safe }});
-    {% endfor %}
-  
+  for (phrase in results) {
+    data.addColumn('number', phrase);
+  }
 
-  // Add graph data, without autoescaping.
-  data.addRows({{results|tojson|safe}});
+  // Add graph data.
+  data.addRows(getChartRows());
 
   // Format the data columns.
   var formatter =
@@ -93,24 +144,91 @@ function drawChart() {
     }
   }
 
+
   function selectHandler() {
-    chart.setSelection(null);
+    var selection = chart.getSelection();
+    var message = '';
+    for (var i = 0; i < selection.length; i++) {
+      var item = selection[i];
+      var year = data.getFormattedValue(item.row, 0);
+      showPostsForYear(year);
+    }
   }
+
   // Draw the chart.
   var chart = new google.visualization.LineChart(
                       document.getElementById('chart_div'));
   google.visualization.events.addListener(chart, 'select', selectHandler);
   chart.draw(data, options);
 }
+    </script>
+  </head>
+
+  <body id="container">
+    <h1 id="logo" style="padding-left: 0cm; color: #009925; font-size: 28px;"> Metafilter N-gram Viewer</span></h1>
+
+    <div style="clear:both"></div>
+    <div class="ngrams_query_section">
+      <form id="query" action="/" method="get" name="input">
+        <div class="query_graphthese_line">Graph these <span style="color:#3369e8;font-weight:bold">case-insensitive</span> comma-separated phrases:
+          <input type="text"
+                 name="content"
+                 size="60"
+                 value="{{content}}"
+                 maxlength=240 />
+        </div>
+        <div class="query_dcs_line">
+          from the corpus
+          <select name="corpus">
+            <option value="mefi" {% if corpus == 'mefi' %} selected {% endif %}>Metafilter</option>
+            <option value="askme" {% if corpus == 'askme' %} selected {% endif %}>Ask Metafilter</option>
+            <option value="meta" {% if corpus == 'meta' %} selected {% endif %}>Metatalk</option>
+            <option value="music" {% if corpus == 'music' %} selected {% endif %}>Music</option>
+          </select>
+        </div>
+
+        <div class="query_submit_line">
+          <input type="submit" value="Search lots of titles" />
+        </div>
+      </form>
+    </div>
+
+    <script type="text/javascript">
+      document.forms['input'].elements['content'].focus();
+    </script>
+
+
+    <div style="clear:both"></div>
+
+
+    <div class="ngrams_chart_section">
+              <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+              <script type="text/javascript">
+// Load the Visualization API.
+google.load('visualization', '1', {'packages':['corechart']});
+
+// Set a callback to run when the Google Visualization API is loaded.
+google.setOnLoadCallback(drawChart);
+
+$(function() {
+  if (location.hash.slice(1) !== '') {
+    showPostsForYear(location.hash.slice(1));
+  }
+})
+
+// Callback that creates and populates a data table, and draws the chart.
                       </script>
               <div align="left" id="chart_div" style="height: 400px;"></div>
 
     </div>
 
+    <div id="post-list">
+    </div>
+
     <div id="about">
       <a href="/static/about.html">About Metafilter N-gram Viewer</a>
     </div>
-    
+
     <script type="text/javascript">
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-38146412-1']);

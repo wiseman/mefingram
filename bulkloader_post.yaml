@@ -49,4 +49,4 @@ transformers:
 
     - property: title
       external_name: title
-      # Type: String
+      import_transform: db.Text

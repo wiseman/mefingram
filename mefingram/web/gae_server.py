@@ -41,11 +41,13 @@ class Post(db.Model):
   site = db.StringProperty()
   postid = db.StringProperty()
   datestamp = db.StringProperty()
-  title = db.StringProperty()
+  # There are a few posts with titles that are longer than the 500
+  # character limit for StringProperty.
+  title = db.TextProperty()
 
 
 def get_year_counts_for_phrases(corpus, phrases):
-  # Counts is a map from [phrase][year] -> count
+  # Counts is a map from [phrase][year] -> (count, postids)
   counts = {}
   tokenized_to_phrases = {}
   logger.debug('phrases=%s', phrases)
@@ -62,7 +64,8 @@ def get_year_counts_for_phrases(corpus, phrases):
   query.filter('site =', corpus)
   query.filter('ngram IN', tokenized_to_phrases.keys())
   for result in query.run(batch_size=10000):
-    counts[tokenized_to_phrases[result.ngram]][result.year] = result.count
+    counts[tokenized_to_phrases[result.ngram]][result.year] = (
+      result.count, result.postids)
   return counts
 
 
@@ -88,7 +91,7 @@ class MainPage(webapp2.RequestHandler):
       content=content,
       corpus=corpus,
       content_phrases=content_phrases,
-      results=final_results)
+      results=results)
     self.response.out.write(template.render(template_values))
 
 
@@ -96,13 +99,16 @@ class PostRequester(webapp2.RequestHandler):
   def get(self):
     corpus = self.request.get('corpus')
     postids = self.request.get('postids')
-    postid_list = postids.split()
-    query = Post.all()
+    postid_list = postids.split(',')
     logger.info('corpus=%s', corpus)
+    logger.info('postids=%s', postids)
+    logger.info('postid_list=%s', postid_list)
+    query = Post.all()
     query.filter('site =', corpus)
     query.filter('postid IN', postid_list)
     results = []
     for post in query.run(batch_size=10000):
+      logger.info('got result %s', post)
       result = (post.postid, post.datestamp, post.title)
       results.append(result)
     self.response.write(json.dumps(results))
