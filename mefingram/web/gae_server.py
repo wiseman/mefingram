@@ -59,7 +59,7 @@ def get_ngram_total_for_year(n, site, year):
   cache =  memcache.get(key)
   if not cache:
     cache = {}
-    logger.info('Building cache')
+    logger.info('Building ngram total cache')
     query = NGramCountTotal.all()
     for result in query.run(batch_size=10000):
       result_key = '%s-%s-%s' % (result.n, result.site, result.year)
@@ -67,7 +67,6 @@ def get_ngram_total_for_year(n, site, year):
     memcache.set(key, cache, 60)
   item_key = '%s-%s-%s' % (n, site, year)
   total = cache[item_key]
-  logger.info('total for %s/%s/%s: %s', n, site, year, total)
   return total
 
 
@@ -93,7 +92,6 @@ def get_year_counts_for_phrases(corpus, phrases):
       result.year)
     counts[tokenized_to_phrases[result.ngram]][result.year] = (
       float(result.count) / total, result.postids)
-    logger.info('%s', counts[tokenized_to_phrases[result.ngram]][result.year])
   return counts
 
 
