@@ -48,16 +48,25 @@ def generate_ngrams_for_sites(sites):
     output_path = 'ngrams_overall.tsv'
     run_counter(
       mfngrams_overall.NGramOverallCounter, joined_posts_path, output_path)
+    with open('ngrams_overall_total.tsv', 'wb') as count_file:
+      with open('ngrams_overall.tsv', 'rb') as ngram_file:
+        mapper.calculate_ngram_counts(ngram_file, count_file, with_date=False)
   if 'yearly' in FLAGS.aggregate:
     logger.info('Generating yearly ngrams for %s...', sites)
     output_path = 'ngrams_yearly.tsv'
     run_counter(
       mfngrams_yearly.NGramYearlyCounter, joined_posts_path, output_path)
+    with open('ngrams_yearly_total.tsv', 'wb') as count_file:
+      with open('ngrams_yearly.tsv', 'rb') as ngram_file:
+        mapper.calculate_ngram_counts(ngram_file, count_file, with_date=True)
   if 'monthly' in FLAGS.aggregate:
     logger.info('Generating monthly ngrams for %s...', sites)
     output_path = 'ngrams_monthly.tsv'
     run_counter(
       mfngrams_monthly.NGramMonthlyCounter, joined_posts_path, output_path)
+    with open('ngrams_monthly_total.tsv', 'wb') as count_file:
+      with open('ngrams_monthly.tsv', 'rb') as ngram_file:
+        mapper.calculate_ngram_counts(ngram_file, count_file, with_date=True)
 
 
 def run_counter(klass, input_path, output_path):

@@ -13,6 +13,9 @@ from mefingram import text
 
 logger = logging.getLogger(__name__)
 
+# The default field size limit is 131072 bytes.  We need more.
+csv.field_size_limit(1000000000)
+
 
 MAX_N = 6
 
@@ -49,7 +52,6 @@ class UnicodeCSVReader:
 
   def __iter__(self):
     return self
-
 
 
 class UnicodeCSVWriter:
@@ -123,7 +125,7 @@ class NGramOverallProtocol(NGramProtocol):
     return result.encode('utf8')
 
 
-lass NGramCounter(job.MRJob):
+class NGramCounter(job.MRJob):
   def __init__(self, *args, **kw_args):
     job.MRJob.__init__(self, *args, **kw_args)
 
@@ -146,3 +148,21 @@ lass NGramCounter(job.MRJob):
 
   def steps(self):
     return [self.mr(self.parse_infodump, self.sum_counts),]
+
+
+def calculate_ngram_counts(ngram_file, output_file, with_date=False):
+  counter = {}
+  reader = UnicodeCSVReader(ngram_file, dialect='excel-tab')
+  for row in reader:
+    if with_date:
+      ngram, site, date, count, postids = row
+      ngram_n = len(ngram.split())
+      key = '%s\t%s\t%s' % (ngram_n, site, date)
+      counter[key] = counter.get(key, 0) + int(count)
+    else:
+      ngram, site, count, postids = row
+      ngram_n = len(ngram.split())
+      key = '%s\t%s' % (ngram_n, site)
+      counter[key] = counter.get(key, 0) + int(count)
+  for key in sorted(counter.keys()):
+    output_file.write('%s\t%s\n' % (key, counter[key]))

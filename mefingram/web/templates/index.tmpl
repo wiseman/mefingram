@@ -23,8 +23,8 @@ CHART_OPTIONS = {
     gridlines: { count: 1 }
   },
   vAxis: {
-    title: '# occurrences',
-    format: '########',
+    title: 'Frequency %',
+    format: '0.00########%',
     gridlines: { count: 6 },
     minValue: 0,
     baselineColor: 'black'
@@ -149,7 +149,7 @@ function drawChart() {
 
   // Format the data columns.
   var formatter =
-      new google.visualization.NumberFormat({ pattern: '######' });
+      new google.visualization.NumberFormat({ pattern: '0.0000######%' });
   for (col = 1; col < data.getNumberOfColumns(); col++) {
     formatter.format(data, col);
   }

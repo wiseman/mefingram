@@ -4,6 +4,7 @@ import logging
 import os
 
 import jinja2
+from google.appengine.api import memcache
 from google.appengine.ext import db
 import webapp2
 
@@ -37,6 +38,13 @@ class NGramCount(db.Model):
   postids = db.StringListProperty()
 
 
+class NGramCountTotal(db.Model):
+  n = db.IntegerProperty()
+  site = db.StringProperty()
+  year = db.IntegerProperty()
+  count = db.IntegerProperty()
+
+
 class Post(db.Model):
   site = db.StringProperty()
   postid = db.StringProperty()
@@ -44,6 +52,23 @@ class Post(db.Model):
   # There are a few posts with titles that are longer than the 500
   # character limit for StringProperty.
   title = db.TextProperty()
+
+
+def get_ngram_total_for_year(n, site, year):
+  key = 'ngram_total'
+  cache =  memcache.get(key)
+  if not cache:
+    cache = {}
+    logger.info('Building cache')
+    query = NGramCountTotal.all()
+    for result in query.run(batch_size=10000):
+      result_key = '%s-%s-%s' % (result.n, result.site, result.year)
+      cache[result_key] = result.count
+    memcache.set(key, cache, 60)
+  item_key = '%s-%s-%s' % (n, site, year)
+  total = cache[item_key]
+  logger.info('total for %s/%s/%s: %s', n, site, year, total)
+  return total
 
 
 def get_year_counts_for_phrases(corpus, phrases):
@@ -62,8 +87,13 @@ def get_year_counts_for_phrases(corpus, phrases):
   query.filter('site =', corpus)
   query.filter('ngram IN', tokenized_to_phrases.keys())
   for result in query.run(batch_size=10000):
+    total = get_ngram_total_for_year(
+      len(result.ngram.split()),
+      corpus,
+      result.year)
     counts[tokenized_to_phrases[result.ngram]][result.year] = (
-      result.count, result.postids)
+      float(result.count) / total, result.postids)
+    logger.info('%s', counts[tokenized_to_phrases[result.ngram]][result.year])
   return counts
 
 
@@ -83,7 +113,6 @@ class MainPage(webapp2.RequestHandler):
     corpus = self.request.get('corpus') or DEFAULT_CORPUS
     content_phrases = content.split(',')
     results = get_year_counts_for_phrases(corpus, content_phrases)
-    final_results = transform_results(content_phrases, results)
     template = jinja.get_template('index.tmpl')
     template_values = dict(
       content=content,
