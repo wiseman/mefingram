@@ -147,12 +147,13 @@ Then point your browser at
 [http://127.0.0.1:5000/](http://127.0.0.1:5000/).
 
 
-mefingram.appspot.com
----------------------
+mefingram.appspot.com on Google App Engine
+------------------------------------------
 
 To upload n-gram data to Google App Engine:
 
 ```
+# N-gram data:
 $ appcfg.py --oauth2 upload_data \
   --config_file=bulkloader_custom.yaml \
   --url=http://mefingram.appspot.com/_ah/remote_api \
@@ -164,6 +165,39 @@ $ appcfg.py --oauth2 upload_data \
   --http_limit=400 \
   --rps_limit=1000 \
   --bandwidth_limit=304800
+
+# N-gram total data, for scaling:
+$ appcfg.py --oauth2 upload_data \
+  --config_file=bulkloader_ngramcounttotal.yaml \
+  --url=http://mefingram.appspot.com/_ah/remote_api \
+  --kind=NGramCountTotal \
+  --filename=ngrams_yearly_total.tsv \
+  --batch_size=20 \
+  --rps_limit=15000 \
+  --num_threads=1 \
+  --http_limit=400 \
+  --rps_limit=1000  \
+  --bandwidth_limit=304800
+
+# Post titles for links:
+$ appcfg.py --oauth2 upload_data \
+  --config_file=bulkloader_post.yaml \
+  --url=http://mefingram.appspot.com/_ah/remote_api \
+  --kind=NGramCount --filename=posts.tsv \
+  --batch_size=20 \
+  --rps_limit=15000 \
+  --num_threads=1 \
+  --http_limit=400 \
+  --rps_limit=1000  \
+  --bandwidth_limit=304800
 ```
 
+Beware, the full n-gram data can take a couple hours to upload and
+cost $50 in datastore writes.
 
+The development server can't handle all the data.  Try generating data
+for just music, which will still bog the server down pretty badly:
+
+```
+$ env/bin/python scripts/mfngrams.py --sites=music --infodump_dir=../infodump-all
+```
