@@ -4,6 +4,8 @@ mefingram
 Mefingram is a Python library for generating n-grams from the
 [Metafilter infodump](http://stuff.metafilter.com/infodump/).
 
+![Web app screenshot](https://raw.github.com/wiseman/mefingram/master/mefingram-screenshot.png "web apps screenshot")
+
 Currently it processes post titles only.
 
 To use it, first download the infodump (beware, it is big: about 350
